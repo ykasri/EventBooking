@@ -1,9 +1,9 @@
 public without sharing class CaseTriggerHelper {
   // Error messages
-  final static String ERROR_ACCOUNT_REQUIRED = 'You cannot create a request without attaching an account';
-  final static String ERROR_CONTACTS_REQUIRED = 'You cannot create a request for accounts without contacts';
-  final static String ERROR_WEB_MAX_ATTENDEES = 'Web request are only allowed to have one attendee';
-  final static String ERROR_PHONE_MAX_ATTENDEES = 'Phone request are only allowed to have three attendee';
+  public final static String ERROR_ACCOUNT_REQUIRED = 'You cannot create a request without attaching an account';
+  public final static String ERROR_CONTACTS_REQUIRED = 'You cannot create a request for accounts without contacts';
+  public final static String ERROR_WEB_MAX_ATTENDEES = 'Web request are only allowed to have one attendee';
+  public final static String ERROR_PHONE_MAX_ATTENDEES = 'Phone request are only allowed to have three attendee';
 
   private List<Case> cases;
   public CaseTriggerHelper(List<Case> newCases) {

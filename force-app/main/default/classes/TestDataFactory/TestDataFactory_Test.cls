@@ -13,6 +13,7 @@
  * @group Test
  * @description TestDataFactory_Test Class
  */
+@SuppressWarnings('PMD')
 @isTest
 public class TestDataFactory_Test {
   /************************* TestDataFactory tests *************************/

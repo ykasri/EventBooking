@@ -1,16 +1,24 @@
 public class SendEmailQueueable implements Queueable {
+  private static String TEMPLATE_API_NAME = 'Notify_attendees';
+
   Contact contact;
 
   public SendEmailQueueable(Contact contact) {
     this.contact = contact;
   }
   public void execute(QueueableContext context) {
+    sendEmailUsingTemplate();
+  }
+
+  public void sendEmailUsingTemplate() {
+    EmailTemplate template = [
+      SELECT Id, Subject, Body
+      FROM EmailTemplate
+      WHERE DeveloperName = :TEMPLATE_API_NAME
+    ];
     Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-    List<String> toAddresses = new List<String>{ contact.Email };
-    mail.setToAddresses(toAddresses);
-    // TO DO : use email template and constants
-    mail.setSubject('Can you dig it?');
-    mail.setPlainTextBody('Hello ' + contact.Name);
+    mail.setTemplateId(template.Id);
+    mail.setTargetObjectId(contact.Id);
     Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
   }
 }

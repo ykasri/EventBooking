@@ -8,7 +8,6 @@ public class CaseTriggerHandler extends TriggerHandler {
     helper.validateCases();
   }
   protected override void afterUpdate() {
-    Set<ID> casesIDs = Trigger.newMap.keySet();
-    CaseTriggerHelper.registerAttendees(casesIDs);
+    helper.registerAttendees();
   }
 }

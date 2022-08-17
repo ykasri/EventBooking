@@ -42,39 +42,38 @@ public without sharing class CaseTriggerHelper {
   }
 
   // Singleton : Contacts Count
-  private Map<ID, Integer> AccountContactsCount;
+  private Map<ID, Integer> accountsContactsCount;
   private Integer getContactsCount(ID accountID) {
     if (
-      AccountContactsCount != null &&
-      AccountContactsCount.containsKey(accountID)
+      accountsContactsCount != null &&
+      accountsContactsCount.containsKey(accountID)
     ) {
-      return AccountContactsCount.get(accountID);
+      return accountsContactsCount.get(accountID);
     }
 
-    Set<ID> casesIDs = getCasesIDs();
-    AccountContactsCount = new Map<ID, Integer>();
-    Account[] accounts = [SELECT ID, (SELECT ID FROM Contacts) FROM Account];
+    Set<ID> accountsIDs = getAccountsIDs();
+    accountsContactsCount = new Map<ID, Integer>();
+    Account[] accounts = [
+      SELECT ID, (SELECT ID FROM Contacts)
+      FROM Account
+      WHERE ID IN :accountsIDs
+    ];
     for (Account account : accounts) {
       Integer contactsCount = account.Contacts.size();
-      AccountContactsCount.put(account.ID, contactsCount);
+      accountsContactsCount.put(account.ID, contactsCount);
     }
-    return AccountContactsCount.get(accountID);
+    return accountsContactsCount.get(accountID);
   }
 
-  private Set<ID> getCasesIDs() {
-    Set<ID> casesIDs = new Set<ID>();
+  private Set<ID> getAccountsIDs() {
+    Set<ID> accountsIDs = new Set<ID>();
     for (Case currentCase : cases) {
-      casesIDs.add(currentCase.Id);
+      accountsIDs.add(currentCase.AccountId);
     }
-    return casesIDs;
+    return accountsIDs;
   }
 
-  public static void registerAttendees(Set<ID> casesIDs) {
-    Case[] cases = [
-      SELECT Id, Status, AccountId
-      FROM Case
-      WHERE Id IN :casesIDs
-    ];
+  public void registerAttendees() {
     for (Case newCase : cases) {
       if (newCase.Status == 'Closed') {
         ExternalSystemService.registerAttendees(newCase.AccountId);

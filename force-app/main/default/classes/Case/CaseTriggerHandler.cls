@@ -1,18 +1,14 @@
 public class CaseTriggerHandler extends TriggerHandler {
-  private ICaseTriggerHelper helper;
+  private CaseTriggerHelper helper;
   public CaseTriggerHandler() {
-    this(new CaseTriggerHelper((List<Case>) Trigger.new));
-  }
-
-  public CaseTriggerHandler(ICaseTriggerHelper helper) {
     this.setMaxLoopCount(3);
-    this.helper = helper;
+    helper = (new CaseTriggerHelper((List<Case>) Trigger.new));
   }
-
   protected override void beforeInsert() {
     helper.validateCases();
   }
   protected override void afterUpdate() {
-    helper.registerAttendees();
+    Set<ID> casesIDs = Trigger.newMap.keySet();
+    CaseTriggerHelper.registerAttendees(casesIDs);
   }
 }

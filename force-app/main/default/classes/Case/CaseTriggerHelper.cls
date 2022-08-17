@@ -1,4 +1,4 @@
-public without sharing class CaseTriggerHelper implements ICaseTriggerHelper {
+public without sharing class CaseTriggerHelper {
   // Error messages
   public final static String ERROR_ACCOUNT_REQUIRED = 'You cannot create a request without attaching an account';
   public final static String ERROR_CONTACTS_REQUIRED = 'You cannot create a request for accounts without contacts';
@@ -73,7 +73,7 @@ public without sharing class CaseTriggerHelper implements ICaseTriggerHelper {
     return casesIDs;
   }
 
-  @future
+  @future(callout=true)
   public static void registerAttendees(Set<ID> casesIDs) {
     Case[] cases = [
       SELECT Id, Status, AccountId

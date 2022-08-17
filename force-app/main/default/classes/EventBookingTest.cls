@@ -149,27 +149,29 @@ public class EventBookingTest {
   }
 
   @isTest
-  public static void notifyContactAfterCaseClosed() {
+  public static void notifyContactAfterCaseIsClosed() {
     // Arrange
     Account account = insertAccountWithContacts(3);
     Case newCase = (Case) TestDataFactory.createSObject(
       'Case',
       new Map<String, Object>{ 'AccountId' => account.Id }
     );
-    MockCaseTriggerHelper helper = new MockCaseTriggerHelper();
-    TriggerHandler handler = new CaseTriggerHandler(helper);
-    handler.setTriggerContext('after update', true);
+    Integer statusCreatedOk = 201;
+    Test.setMock(
+      HttpCalloutMock.class,
+      new MockHttpResponseGenerator(statusCreatedOk)
+    );
 
     // Act
     Test.startTest();
-    handler.run();
+    newCase.Status = 'Closed';
+    update newCase;
     Test.stopTest();
 
     // Assert
-    // Task createdTask = [SELECT ID, WhatId, Subject FROM Task];
-    // System.assert(createdTask.Subject.contains('Send Email To'));
-    // System.assert(createdTask.WhatId == account.Id);
-    System.assert(helper.isRegisterAttendeesCalled);
+    Task createdTask = [SELECT ID, WhatId, Subject FROM Task];
+    System.assert(createdTask.Subject.contains('Send Email To'));
+    System.assert(createdTask.WhatId == account.Id);
   }
 }
 

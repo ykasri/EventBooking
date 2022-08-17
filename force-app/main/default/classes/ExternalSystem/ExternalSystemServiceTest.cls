@@ -9,6 +9,7 @@ public class ExternalSystemServiceTest {
       HttpCalloutMock.class,
       new MockHttpResponseGenerator(returnStatus)
     );
+    PostRequestQueueable.isTestRunning = true;
     // Prepare data
     Case newCase = createCaseWithAccountAndContact();
 
@@ -68,25 +69,36 @@ public class ExternalSystemServiceTest {
       System.assert(errorLog.Message__c != null);
     }
   }
+
   @isTest
-  static void notifyAttendeeByEmail_ThrowsError_IfNoAccountID() {
+  static void PostRequestQueueable_DoesInvoke_SendEmailQueueableIfSuccess() {
+    // Arrange
     Contact contact = (Contact) TestDataFactory.createSObject(
       'Contact',
-      new Map<String, Object>{ 'Email' => 'test@example.com' }
+      new Map<String, Object>{ 'Email' => 'test@example.tom' }
+    );
+    Test.setMock(
+      HttpCalloutMock.class,
+      new MockHttpResponseGenerator(PostRequestQueueable.STATUS_CREATED_OK)
     );
 
+    // Act
     Test.startTest();
-    ExternalSystemService.notifyAttendeeByEmail(contact);
+    Queueable postRequestJob = new PostRequestQueueable(contact);
+    postRequestJob.execute(null);
     Test.stopTest();
 
-    // Assert the Email Queueable Job is Processed
+    // Assert
     List<AsyncApexJob> jobs = [
-      SELECT Id, NumberOfErrors, Status
+      SELECT Id, NumberOfErrors, Status, ApexClassId, ApexClass.Name
       FROM AsyncApexJob
       WHERE JobType = 'Queueable'
     ];
     System.assert(jobs.size() == 1);
-    System.assert(jobs[0].NumberOfErrors == 0);
-    System.assert(jobs[0].Status == 'Completed');
+    for (AsyncApexJob job : jobs) {
+      System.assert(job.NumberOfErrors == 0);
+      System.assert(job.Status == 'Completed');
+      System.assert(job.ApexClass.Name == SendEmailQueueable.class.getName());
+    }
   }
 }

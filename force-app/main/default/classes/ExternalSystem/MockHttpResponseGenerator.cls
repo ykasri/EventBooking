@@ -17,7 +17,7 @@ public class MockHttpResponseGenerator implements HttpCalloutMock {
     HttpResponse response = new HttpResponse();
     hasCorrectHeaders =
       request.getMethod() == 'POST' &&
-      request.getEndpoint() == ExternalSystemService.WEBSERVICE_URL &&
+      request.getEndpoint() == PostRequestQueueable.WEBSERVICE_URL &&
       request.getHeader('Content-Type').startsWith('application/json');
 
     receivedBody = request.getBody();

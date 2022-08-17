@@ -42,9 +42,7 @@ public without sharing class CaseTriggerHelper {
   }
 
   // Singleton : Contacts Count
-  @testVisible
   private Map<ID, Integer> AccountContactsCount;
-  @testVisible
   private Integer getContactsCount(ID accountID) {
     if (
       AccountContactsCount != null &&
@@ -60,9 +58,7 @@ public without sharing class CaseTriggerHelper {
       Integer contactsCount = account.Contacts.size();
       AccountContactsCount.put(account.ID, contactsCount);
     }
-    return AccountContactsCount.containsKey(accountID)
-      ? AccountContactsCount.get(accountID)
-      : 0; // 0 If account has no contacts
+    return AccountContactsCount.get(accountID);
   }
 
   private Set<ID> getCasesIDs() {

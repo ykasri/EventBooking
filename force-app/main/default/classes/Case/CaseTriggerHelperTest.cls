@@ -5,6 +5,10 @@ public class CaseTriggerHelperTest {
     Case[] cases = new List<Case>();
     CaseTriggerHelper helper = new CaseTriggerHelper(cases);
     helper.validateCases();
+
+    cases.add(null);
+    helper = new CaseTriggerHelper(cases);
+    helper.validateCases();
   }
 
   @isTest

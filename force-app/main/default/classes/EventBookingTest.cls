@@ -154,7 +154,8 @@ public class EventBookingTest {
   @isTest
   public static void notifyContactAfterCaseIsClosed() {
     // Arrange
-    Account account = insertAccountWithContacts(3);
+    Integer contactsCount = 3;
+    Account account = insertAccountWithContacts(contactsCount);
     Case newCase = (Case) TestDataFactory.createSObject(
       'Case',
       new Map<String, Object>{ 'AccountId' => account.Id }
@@ -167,19 +168,23 @@ public class EventBookingTest {
 
     // Act
     Test.startTest();
+    PostRequestQueueable.isTestRunning = true;
     newCase.Status = 'Closed';
     update newCase;
     Test.stopTest();
     // Assert
     // Assert the Email Queueable Job is Processed
     List<AsyncApexJob> jobs = [
-      SELECT Id, NumberOfErrors, Status
+      SELECT Id, NumberOfErrors, Status, ApexClassId, ApexClass.Name
       FROM AsyncApexJob
       WHERE JobType = 'Queueable'
     ];
-    System.assert(jobs.size() == 1);
-    System.assert(jobs[0].NumberOfErrors == 0);
-    System.assert(jobs[0].Status == 'Completed');
+    System.assert(jobs.size() == contactsCount);
+    for (AsyncApexJob job : jobs) {
+      System.assert(job.NumberOfErrors == 0);
+      System.assert(job.Status == 'Completed');
+      System.assert(job.ApexClass.Name == PostRequestQueueable.class.getName());
+    }
   }
 }
 

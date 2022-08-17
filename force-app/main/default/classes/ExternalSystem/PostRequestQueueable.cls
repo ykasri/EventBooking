@@ -1,5 +1,10 @@
-public with sharing class PostRequestQueueable {
-  private final Integer STATUS_CREATED_OK = 201;
+public class PostRequestQueueable implements Queueable, Database.AllowsCallouts {
+  public static final String WEBSERVICE_URL = 'https://th-apex-http-callout.herokuapp.com/animals';
+  public static final Integer STATUS_CREATED_OK = 201;
+
+  @testVisible
+  private static Boolean isTestRunning = false;
+
   private Contact contact;
 
   public PostRequestQueueable(Contact contact) {
@@ -19,7 +24,9 @@ public with sharing class PostRequestQueueable {
   private String buildJsonBody() {
     JSONGenerator jsonGenerator = JSON.createGenerator(true);
     jsonGenerator.writeStartObject();
-    jsonGenerator.writeStringField('name', contact.Name);
+    if (String.isNotBlank(contact.Name)) {
+      jsonGenerator.writeStringField('name', contact.Name);
+    }
     if (String.isNotBlank(contact.Email)) {
       jsonGenerator.writeStringField('email', contact.Email);
     }
@@ -27,7 +34,7 @@ public with sharing class PostRequestQueueable {
     return jsonGenerator.getAsString();
   }
 
-  private static Boolean postRequest(String jsonBody) {
+  private static HttpResponse postRequest(String jsonBody) {
     Http http = new Http();
     HttpRequest request = new HttpRequest();
     request.setEndpoint(WEBSERVICE_URL);
@@ -36,12 +43,15 @@ public with sharing class PostRequestQueueable {
     // Set the body as a JSON object
     request.setBody(jsonBody);
     HttpResponse response = http.send(request);
-    return response.getStatusCode() == STATUS_CREATED_OK;
+    return response;
   }
 
+  @testVisible
   private void notifyByEmail() {
-    SendEmailQueueable updateJob = new SendEmailQueueable(contact);
-    System.enqueueJob(updateJob);
+    if (!isTestRunning) {
+      SendEmailQueueable sendEmailJob = new SendEmailQueueable(contact);
+      System.enqueueJob(sendEmailJob);
+    }
   }
 
   private static void logResponse(HttpResponse response) {

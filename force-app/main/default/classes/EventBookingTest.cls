@@ -72,7 +72,10 @@ public class EventBookingTest {
     Account account = (Account) TestDataFactory.createSObject('Account');
     TestDataFactory.createSObjectList(
       'Contact',
-      new Map<String, Object>{ 'AccountId' => account.Id },
+      new Map<String, Object>{
+        'AccountId' => account.Id,
+        'Email' => 'test@example.com'
+      },
       contactsCount
     );
     return account;
@@ -167,11 +170,16 @@ public class EventBookingTest {
     newCase.Status = 'Closed';
     update newCase;
     Test.stopTest();
-
     // Assert
-    Task createdTask = [SELECT ID, WhatId, Subject FROM Task];
-    System.assert(createdTask.Subject.contains('Send Email To'));
-    System.assert(createdTask.WhatId == account.Id);
+    // Assert the Email Queueable Job is Processed
+    List<AsyncApexJob> jobs = [
+      SELECT Id, NumberOfErrors, Status
+      FROM AsyncApexJob
+      WHERE JobType = 'Queueable'
+    ];
+    System.assert(jobs.size() == 1);
+    System.assert(jobs[0].NumberOfErrors == 0);
+    System.assert(jobs[0].Status == 'Completed');
   }
 }
 

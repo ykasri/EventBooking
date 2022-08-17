@@ -9,17 +9,16 @@ public class ExternalSystemServiceTest {
       HttpCalloutMock.class,
       new MockHttpResponseGenerator(returnStatus)
     );
-    ExternalSystemService service = new ExternalSystemService();
     // Prepare data
     Case newCase = createCaseWithAccountAndContact();
 
     /// Act
     Test.startTest();
-    service.registerAttendees(newCase);
+    ExternalSystemService.registerAttendees(newCase.AccountId);
+    Test.stopTest();
     Map<String, Object> sentBody = (Map<String, Object>) JSON.deserializeUntyped(
       MockHttpResponseGenerator.receivedBody
     );
-    Test.stopTest();
 
     /// ASSERT
     System.assert(
@@ -58,11 +57,10 @@ public class ExternalSystemServiceTest {
       HttpCalloutMock.class,
       new MockHttpResponseGenerator(returnStatus)
     );
-    ExternalSystemService service = new ExternalSystemService();
 
     // Act
     Test.startTest();
-    service.registerAttendees(newCase);
+    ExternalSystemService.registerAttendees(newCase.AccountId);
     Test.stopTest();
 
     // Assert
@@ -72,16 +70,23 @@ public class ExternalSystemServiceTest {
   }
   @isTest
   static void notifyAttendeeByEmail_ThrowsError_IfNoAccountID() {
-    Contact contact = (Contact) TestDataFactory.createSObject('Contact');
-    ExternalSystemService service = new ExternalSystemService();
+    Contact contact = (Contact) TestDataFactory.createSObject(
+      'Contact',
+      new Map<String, Object>{ 'Email' => 'test@example.com' }
+    );
 
     Test.startTest();
-    service.notifyAttendeeByEmail(contact);
+    ExternalSystemService.notifyAttendeeByEmail(contact);
     Test.stopTest();
 
-    List<Log__c> logs = [SELECT Id, Message__c FROM Log__c];
-    System.assert(logs.size() == 1);
-    Log__c firstLog = logs[0];
-    System.assert(firstLog.Message__c != null);
+    // Assert the Email Queueable Job is Processed
+    List<AsyncApexJob> jobs = [
+      SELECT Id, NumberOfErrors, Status
+      FROM AsyncApexJob
+      WHERE JobType = 'Queueable'
+    ];
+    System.assert(jobs.size() == 1);
+    System.assert(jobs[0].NumberOfErrors == 0);
+    System.assert(jobs[0].Status == 'Completed');
   }
 }

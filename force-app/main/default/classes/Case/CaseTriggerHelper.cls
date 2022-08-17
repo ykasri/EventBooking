@@ -73,7 +73,6 @@ public without sharing class CaseTriggerHelper {
     return casesIDs;
   }
 
-  @future(callout=true)
   public static void registerAttendees(Set<ID> casesIDs) {
     Case[] cases = [
       SELECT Id, Status, AccountId
@@ -82,8 +81,7 @@ public without sharing class CaseTriggerHelper {
     ];
     for (Case newCase : cases) {
       if (newCase.Status == 'Closed') {
-        ExternalSystemService service = new ExternalSystemService();
-        service.registerAttendees(newCase);
+        ExternalSystemService.registerAttendees(newCase.AccountId);
       }
     }
   }

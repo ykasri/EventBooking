@@ -1,18 +1,16 @@
 public class ExternalSystemService {
   public static final String WEBSERVICE_URL = 'https://th-apex-http-callout.herokuapp.com/animals';
 
-  public void registerAttendees(Case currentCase) {
-    for (Account account : [
-      SELECT Id
-      FROM Account
-      WHERE id = :currentCase.AccountId
-    ]) {
+  @future(callout=true)
+  public static void registerAttendees(ID accountID) {
+    for (Account account : [SELECT Id FROM Account WHERE id = :accountID]) {
       for (Contact contact : [
         SELECT Id, Name, Email, AccountId
         FROM Contact
-        WHERE AccountId = :account.Id
+        WHERE AccountId = :accountID
       ]) {
-        HttpResponse response = sendHttpRequest(contact);
+        String jsonBody = buildJsonBody(contact);
+        HttpResponse response = sendHttpRequest(jsonBody);
         if (response.getStatusCode() == 201) {
           notifyAttendeeByEmail(contact); // Everything went as expected.
         } else {
@@ -22,13 +20,7 @@ public class ExternalSystemService {
     }
   }
 
-  private HttpResponse sendHttpRequest(Contact contact) {
-    Http http = new Http();
-    HttpRequest request = new HttpRequest();
-    request.setEndpoint(WEBSERVICE_URL);
-    request.setMethod('POST');
-    request.setHeader('Content-Type', 'application/json;charset=UTF-8');
-    // Set the body as a JSON object
+  private static String buildJsonBody(Contact contact) {
     JSONGenerator jsonGenerator = JSON.createGenerator(true);
     jsonGenerator.writeStartObject();
     jsonGenerator.writeStringField('name', contact.Name);
@@ -36,27 +28,30 @@ public class ExternalSystemService {
       jsonGenerator.writeStringField('email', contact.Email);
     }
     jsonGenerator.writeEndObject();
-    request.setBody(jsonGenerator.getAsString());
+    return jsonGenerator.getAsString();
+  }
+
+  private static HttpResponse sendHttpRequest(String jsonBody) {
+    Http http = new Http();
+    HttpRequest request = new HttpRequest();
+    request.setEndpoint(WEBSERVICE_URL);
+    request.setMethod('POST');
+    request.setHeader('Content-Type', 'application/json;charset=UTF-8');
+    // Set the body as a JSON object
+    request.setBody(jsonBody);
     HttpResponse response = http.send(request);
     return response;
   }
 
-  public void notifyAttendeeByEmail(Contact contact) {
-    Task task = new Task();
-    task.Subject = 'Send Email To' + contact.Name;
-    task.Status = 'Open';
-    task.Priority = 'Normal';
-    task.WhatId = contact.AccountId;
-    Database.SaveResult result = Database.insert(task);
-    if (result.isSuccess()) {
-      // Operation was successful, so get the ID of the record that was processed
-      System.debug('Successfully inserted Task. Task ID: ' + task.Id);
-    } else {
-      Log.error(new List<Database.SaveResult>{ result });
-    }
+  private static void postRequestThenNotifyByEmail() {
   }
 
-  public void logResponse(HttpResponse response) {
+  public static void notifyAttendeeByEmail(Contact contact) {
+    SendEmailQueueable updateJob = new SendEmailQueueable(contact);
+    ID jobID = System.enqueueJob(updateJob);
+  }
+
+  public static void logResponse(HttpResponse response) {
     Log.error(
       'The status code returned was not expected: ' +
       response.getStatusCode() +

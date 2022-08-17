@@ -52,19 +52,12 @@ public class ExternalSystemService {
       // Operation was successful, so get the ID of the record that was processed
       System.debug('Successfully inserted Task. Task ID: ' + task.Id);
     } else {
-      // Operation failed, so get all errors
-      for (Database.Error err : result.getErrors()) {
-        System.debug('The following error has occurred.');
-        System.debug(err.getStatusCode() + ': ' + err.getMessage());
-        System.debug(
-          'Task fields that affected this error: ' + err.getFields()
-        );
-      }
+      Log.error(new List<Database.SaveResult>{ result });
     }
   }
 
   public void logResponse(HttpResponse response) {
-    System.debug(
+    Log.error(
       'The status code returned was not expected: ' +
       response.getStatusCode() +
       ' ' +

@@ -1,4 +1,4 @@
-public without sharing class CaseTriggerHelper {
+public without sharing class CaseTriggerHelper implements ICaseTriggerHelper {
   // Error messages
   public final static String ERROR_ACCOUNT_REQUIRED = 'You cannot create a request without attaching an account';
   public final static String ERROR_CONTACTS_REQUIRED = 'You cannot create a request for accounts without contacts';
@@ -8,10 +8,6 @@ public without sharing class CaseTriggerHelper {
   private List<Case> cases;
   public CaseTriggerHelper(List<Case> newCases) {
     this.cases = newCases;
-  }
-
-  private CaseTriggerHelper() {
-    return; // Disable the default constructor
   }
 
   public void validateCases() {
@@ -46,7 +42,9 @@ public without sharing class CaseTriggerHelper {
   }
 
   // Singleton : Contacts Count
+  @testVisible
   private Map<ID, Integer> AccountContactsCount;
+  @testVisible
   private Integer getContactsCount(ID accountID) {
     if (
       AccountContactsCount != null &&
@@ -75,7 +73,13 @@ public without sharing class CaseTriggerHelper {
     return casesIDs;
   }
 
-  public void registerAttendees() {
+  @future
+  public static void registerAttendees(Set<ID> casesIDs) {
+    Case[] cases = [
+      SELECT Id, Status, AccountId
+      FROM Case
+      WHERE Id IN :casesIDs
+    ];
     for (Case newCase : cases) {
       if (newCase.Status == 'Closed') {
         ExternalSystemService service = new ExternalSystemService();

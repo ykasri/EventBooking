@@ -1,8 +1,12 @@
 public class CaseTriggerHandler extends TriggerHandler {
-  private CaseTriggerHelper helper;
+  private ICaseTriggerHelper helper;
   public CaseTriggerHandler() {
-    this.setMaxLoopCount(1);
-    helper = new CaseTriggerHelper((List<Case>) Trigger.new);
+    this(new CaseTriggerHelper((List<Case>) Trigger.new));
+  }
+
+  public CaseTriggerHandler(ICaseTriggerHelper helper) {
+    this.setMaxLoopCount(3);
+    this.helper = helper;
   }
 
   protected override void beforeInsert() {

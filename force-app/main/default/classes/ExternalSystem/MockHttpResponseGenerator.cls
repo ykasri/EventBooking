@@ -2,10 +2,14 @@
 public class MockHttpResponseGenerator implements HttpCalloutMock {
   public static Boolean hasCorrectHeaders;
   public static String receivedBody;
-
   static {
     hasCorrectHeaders = false;
     receivedBody = null;
+  }
+
+  private Integer returnStatus;
+  public MockHttpResponseGenerator(Integer returnStatus) {
+    this.returnStatus = returnStatus;
   }
 
   /* @see https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_restful_http_testing_httpcalloutmock.htm */
@@ -18,7 +22,7 @@ public class MockHttpResponseGenerator implements HttpCalloutMock {
 
     receivedBody = request.getBody();
     if (hasCorrectHeaders) {
-      response.setStatusCode(201);
+      response.setStatusCode(returnStatus);
     }
     return response;
   }

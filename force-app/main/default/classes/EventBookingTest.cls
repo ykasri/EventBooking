@@ -147,4 +147,41 @@ public class EventBookingTest {
       result.getErrors()[0].getMessage()
     );
   }
+
+  @isTest
+  public static void notifyContactAfterCaseClosed() {
+    // Arrange
+    Account account = insertAccountWithContacts(3);
+    Case newCase = (Case) TestDataFactory.createSObject(
+      'Case',
+      new Map<String, Object>{ 'AccountId' => account.Id }
+    );
+    MockCaseTriggerHelper helper = new MockCaseTriggerHelper();
+    TriggerHandler handler = new CaseTriggerHandler(helper);
+    handler.setTriggerContext('after update', true);
+
+    // Act
+    Test.startTest();
+    handler.run();
+    Test.stopTest();
+
+    // Assert
+    // Task createdTask = [SELECT ID, WhatId, Subject FROM Task];
+    // System.assert(createdTask.Subject.contains('Send Email To'));
+    // System.assert(createdTask.WhatId == account.Id);
+    System.assert(helper.isRegisterAttendeesCalled);
+  }
 }
+
+/**
+=== Apex Code Coverage by Class
+CLASSES                PERCENT  UNCOVERED LINES  
+─────────────────────  ───────  ─────────────────
+CaseTriggerHelper      76%      13,14,30,53,55...
+Log                    100%                      
+ExternalSystemService  98%      55               
+TriggerHandler         100%                      
+CaseTriggerHandler     100%                      
+CaseTrigger            100%   
+ */
+
